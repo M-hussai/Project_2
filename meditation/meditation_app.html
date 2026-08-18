@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meditation App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+    }
+
+    /* Background Video Container */
+    .bg-video-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: -1;
+    }
+
+    .bg-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.65);
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    /* Main App Interface */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 80vh;
+      width: 90%;
+      max-width: 500px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 2rem;
+      letter-spacing: 2px;
+      margin-top: 10px;
+    }
+
+    /* Timer Display */
+    .timer-display {
+      font-size: 4.5rem;
+      font-weight: 300;
+      letter-spacing: 3px;
+      margin: 20px 0;
+    }
+
+    /* Controls Layout */
+    .controls-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    button.active {
+      background: #ffffff;
+      color: #111111;
+      font-weight: bold;
+      border-color: #ffffff;
+    }
+
+    .play-btn {
+      padding: 14px 40px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: #28a745;
+      border: none;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    }
+
+    .play-btn:hover {
+      background: #218838;
+    }
+
+    .play-btn.paused {
+      background: #dc3545;
+      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    }
+
+    .section-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.8;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Video -->
+  <div class="bg-video-container">
+    <video id="bg-video" class="bg-video" loop muted playsinline>
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <!-- Audio Players -->
+  <audio id="audio-player" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=rain-and-paved-road-11290.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    <h1>MEDITATE</h1>
+
+    <!-- Timer Display -->
+    <div class="timer-display" id="time-display">05:00</div>
+
+    <!-- Controls -->
+    <div class="controls-section">
+      <!-- Play/Pause Button -->
+      <button class="play-btn" id="play-btn">START</button>
+
+      <!-- Time Selection -->
+      <div>
+        <div class="section-label">Select Duration</div>
+        <div class="btn-group">
+          <button class="time-btn" data-time="120">2 Min</button>
+          <button class="time-btn active" data-time="300">5 Min</button>
+          <button class="time-btn" data-time="600">10 Min</button>
+        </div>
+      </div>
+
+      <!-- Sound/Theme Selection -->
+      <div>
+        <div class="section-label">Select Sound & Theme</div>
+        <div class="btn-group">
+          <button class="sound-btn active" 
+                  data-sound="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=rain-and-paved-road-11290.mp3"
+                  data-video="https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4">
+            Rain
+          </button>
+          <button class="sound-btn" 
+                  data-sound="https://cdn.pixabay.com/download/audio/2021/09/06/audio_7803df3927.mp3?filename=ocean-waves-11290.mp3"
+                  data-video="https://assets.mixkit.co/videos/preview/mixkit-sea-waves-looping-video-1188-large.mp4">
+            Ocean
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Element Selections
+    const video = document.getElementById('bg-video');
+    const audio = document.getElementById('audio-player');
+    const playBtn = document.getElementById('play-btn');
+    const timeDisplay = document.getElementById('time-display');
+    const timeButtons = document.querySelectorAll('.time-btn');
+    const soundButtons = document.querySelectorAll('.sound-btn');
+
+    // App State Variables
+    let duration = 300; // Default 5 minutes (in seconds)
+    let remainingTime = duration;
+    let timerInterval = null;
+    let isPlaying = false;
+
+    // Helper: Format Seconds to MM:SS
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Update Display Initial state
+    timeDisplay.textContent = formatTime(remainingTime);
+
+    // Toggle Play/Pause Logic
+    function togglePlay() {
+      if (!isPlaying) {
+        // Start playback
+        audio.play();
+        video.play();
+        isPlaying = true;
+        playBtn.textContent = 'PAUSE';
+        playBtn.classList.add('paused');
+
+        // Start countdown interval
+        timerInterval = setInterval(() => {
+          remainingTime--;
+          timeDisplay.textContent = formatTime(remainingTime);
+
+          if (remainingTime <= 0) {
+            resetMeditation();
+          }
+        }, 1000);
+      } else {
+        // Pause playback
+        pauseMeditation();
+      }
+    }
+
+    function pauseMeditation() {
+      audio.pause();
+      video.pause();
+      clearInterval(timerInterval);
+      isPlaying = false;
+      playBtn.textContent = 'START';
+      playBtn.classList.remove('paused');
+    }
+
+    function resetMeditation() {
+      pauseMeditation();
+      remainingTime = duration;
+      timeDisplay.textContent = formatTime(remainingTime);
+    }
+
+    // Play/Pause Button Listener
+    playBtn.addEventListener('click', togglePlay);
+
+    // Duration Selector Listeners
+    timeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        timeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        duration = parseInt(btn.getAttribute('data-time'));
+        resetMeditation();
+      });
+    });
+
+    // Sound and Video Switcher Listeners
+    soundButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        soundButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const newSound = btn.getAttribute('data-sound');
+        const newVideo = btn.getAttribute('data-video');
+
+        // Update Audio & Video Sources
+        audio.src = newSound;
+        video.src = newVideo;
+
+        // Restart session with new media
+        resetMeditation();
+      });
+    });
+  </script>
+</body>
+</html>
